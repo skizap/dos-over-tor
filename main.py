@@ -3,6 +3,8 @@
 import app.console
 import app.net
 import app.tor
+from app.command import Platoon
+from app.weapons.singleshot import SingleShotFactory
 import fire
 
 
@@ -13,7 +15,7 @@ class BFDCLI:
             tor_address='127.0.0.1',
             tor_proxy_port=9050,
             tor_ctrl_port=9051,
-            max_threads=10
+            num_soldiers=10
         ):
         """
 
@@ -23,6 +25,9 @@ class BFDCLI:
         self._tor_address = tor_address
         self._tor_proxy_port = tor_proxy_port
         self._tor_ctrl_port = tor_ctrl_port
+
+        self._platoon = None  # app.command.Platoon
+        self._num_soldiers = num_soldiers
 
     def singleshot(self, target):
         """
@@ -35,9 +40,13 @@ class BFDCLI:
             self._connect()
 
             app.console.system("running singleshot")
-            # app.aresenal.singleshot.run(
-            #     target=target
-            # )
+
+            weapon_factory = SingleShotFactory()
+
+            self._platoon.attack(
+                weapon_factory=weapon_factory,
+                target_url=target
+            )
 
         except Exception as ex:
 
@@ -68,6 +77,11 @@ class BFDCLI:
 
         ourip = app.net.lookupip()
         app.console.system("identity on TOR; %s" % ourip)
+
+        app.console.system("creating thread platoon with %d soldiers" % self._num_soldiers)
+        self._platoon = Platoon(
+            num_soldiers=self._num_soldiers
+        )
 
     def _shutdown(self):
         """
