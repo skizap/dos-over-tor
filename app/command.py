@@ -38,7 +38,7 @@ class SoldierThread(threading.Thread):
       self._monitor = monitor
 
       # whether the thread should be actively attacking
-      self._attacking = False
+      self._is_attacking = False
 
    def attack(self, **kwargs):
 
@@ -51,14 +51,16 @@ class SoldierThread(threading.Thread):
 
       app.console.log("stopping soldier thread #%d" % self._id)
 
-      self._attacking = False
-      self.join()
+      self._is_attacking = False
+
+      if self.isAlive():
+         self.join()
 
    def run(self):
 
       app.console.log("starting soldier thread #%d" % self._id)
 
-      while self._attacking:
+      while self._is_attacking:
 
          http_status = self._weapon.attack(self._target_url)
 
@@ -78,6 +80,9 @@ class Platoon:
 
       self._monitor = Monitor()
 
+      # whether the platoon should be actively attacking
+      self._is_attacking = False
+
       # spawn all of the soldier threads
       self._soldiers = []
       for soldier_id in range(0, self._num_soldiers):
@@ -96,6 +101,8 @@ class Platoon:
 
       app.console.log("starting attack on %s" % target_url)
 
+      self._is_attacking = True
+
       # start each of the soldier threads attacking
       # will slowely ramp up the soldier threads over a number of seconds (i.e. wont create them all at once)
       for soldier in self._soldiers:
@@ -113,7 +120,7 @@ class Platoon:
          time.sleep(delay)
 
       # update status line periodically
-      while True:
+      while self._is_attacking:
 
          (http_status, hits_per_sec) = self._monitor.get_status()
 
@@ -127,6 +134,8 @@ class Platoon:
 
    def hold_fire(self):
       """Stop the attack, tell all of the soldier threads to hold_fire()"""
+
+      self._is_attacking = False
 
       for soldier in self._soldiers:
          soldier.hold_fire()

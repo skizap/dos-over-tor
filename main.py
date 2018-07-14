@@ -1,4 +1,4 @@
-#!env python3
+#!/usr/bin/env python
 
 import app.console
 import app.net
@@ -6,6 +6,8 @@ import app.tor
 from app.command import Platoon
 from app.weapons.singleshot import SingleShotFactory
 import fire
+import signal
+import sys
 
 
 class BFDCLI:
@@ -28,6 +30,8 @@ class BFDCLI:
 
         self._platoon = None  # app.command.Platoon
         self._num_soldiers = num_soldiers
+
+        self._register_sig_handler()
 
     def singleshot(self, target):
         """
@@ -94,6 +98,15 @@ class BFDCLI:
         app.tor.close()
 
         app.console.shutdown()
+
+    def _register_sig_handler(self):
+
+        signal.signal(signal.SIGINT, self._signal_handler)
+
+    def _signal_handler(self, sig, frame):
+
+        app.console.log("signal received, holding fire")
+        self._platoon.hold_fire()
 
 
 if __name__ == '__main__':
