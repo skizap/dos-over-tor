@@ -108,8 +108,7 @@ def url_cache_buster(url):
 
     scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url)
 
-    query = "%d=%d" % (
-        random.randint(1, 999999999),
+    query = "%d" % (
         random.randint(1, 999999999)
     )
 

