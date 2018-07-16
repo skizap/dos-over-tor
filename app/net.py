@@ -4,6 +4,7 @@ Some useful networking related utility functions.
 
 import urllib.request
 import user_agent
+import random
 
 
 class RequestException(Exception):
@@ -107,8 +108,10 @@ def url_cache_buster(url):
 
     scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url)
 
-    query = {}
-    uquery[random.randint(1, 999999999)] = random.randint(1, 999999999)
+    query = "%d=%d" % (
+        random.randint(1, 999999999),
+        random.randint(1, 999999999)
+    )
 
     return urllib.parse.urlunparse(
         (scheme, netloc, path, params, query, fragment)
