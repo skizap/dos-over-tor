@@ -93,13 +93,14 @@ class SoldierThread(threading.Thread):
             try:
 
                 (num_hits, http_status) = self._weapon.attack(self._target_url)
+                self._monitor.report_hit(self, num_hits, http_status)
 
             except RequestException as ex:
 
                 app.console.error(str(ex))
                 http_status = 0
 
-            self._monitor.report_hit(self, num_hits, http_status)
+                self._monitor.report_hit(self, 1, http_status)
 
 
 class Platoon:
