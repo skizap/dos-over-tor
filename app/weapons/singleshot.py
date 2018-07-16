@@ -27,4 +27,4 @@ class SingleShotWeapon(Weapon):
         response = app.net.request(self._http_method, target_url)
         status_code = response.getcode()
 
-        return status_code
+        return (1, status_code)  # 1 hit
