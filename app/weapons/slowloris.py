@@ -1,10 +1,11 @@
 
-import app.net
-from . import Weapon, WeaponFactory
 import random
 import socket
+import ssl
 import time
 import urllib
+import app.net
+from . import Weapon, WeaponFactory
 
 
 class SlowLorisFactory(WeaponFactory):
@@ -50,7 +51,7 @@ class SlowLorisWeapon(Weapon):
         sock.settimeout(4)
 
         if scheme == 'https':
-            sock = ssl.wrap_socket(s)
+            sock = ssl.wrap_socket(sock)
 
         # connect to remote server
 

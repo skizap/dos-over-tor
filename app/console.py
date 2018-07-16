@@ -4,10 +4,8 @@ Console logging system.
 
 import datetime
 import os
-import string
 import sys
 import re
-import readline
 
 
 # ASCII escape colours
@@ -21,8 +19,8 @@ _ESCAPE_DARK_YELLOW = '\u001b[33m'
 _ESCAPE_YELLOW = '\u001b[33;1m'
 _ESCAPE_DARK_BLUE = '\u001b[34m'
 _ESCAPE_BLUE = '\u001b[34;1m'
-_ESCAPE_DARK_MAGENTA= '\u001b[35m'
-_ESCAPE_MAGENTA= '\u001b[35;1m'
+_ESCAPE_DARK_MAGENTA = '\u001b[35m'
+_ESCAPE_MAGENTA = '\u001b[35;1m'
 _ESCAPE_DARK_CYAN = '\u001b[36m'
 _ESCAPE_CYAN = '\u001b[36;1m'
 _ESCAPE_GREY = '\u001b[37m'
@@ -45,7 +43,7 @@ def _escape(text, esc_code):
     escaped = text  # by default, we leave the text unchanged
 
     # escape the text if a valid escape code is given
-    if len(esc_code) > 0:
+    if esc_code:
         escaped = "%s%s%s" % (esc_code, text, _ESCAPE_RESET)
 
     return escaped
@@ -99,7 +97,7 @@ def _log_header_len():
     # strip out the ANSI escape code
     logger_header_stripped = _strip_escape_codes(logger_header)
 
-    return len(logger_header)
+    return len(logger_header_stripped)
 
 
 def _log(colour, message):
@@ -161,15 +159,15 @@ def system(message):
 def hr():
     """Outputs a horizontal rule / line."""
 
-    (width, height) = _ttysize()
+    (width, ) = _ttysize()
 
     # build the horizontal line
-    hr = ""
+    row = ""
     for i in range(0, width-_log_header_len()):
-        hr += "#"
+        row += "#"
 
     # output the line
-    log(hr)
+    log(row)
 
 
 def back(num_lines):

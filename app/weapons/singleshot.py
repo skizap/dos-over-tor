@@ -1,13 +1,11 @@
 
 import app.net
 from . import Weapon, WeaponFactory
-import time
-import urllib.request
 
 
 class SingleShotFactory(WeaponFactory):
 
-    def make(self, **kwargs):
+    def make(self):
 
         return SingleShotWeapon(
             http_method=self._http_method,

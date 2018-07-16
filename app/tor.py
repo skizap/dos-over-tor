@@ -1,8 +1,9 @@
-import socks
+
 import socket
+import urllib.error
+import socks
 import stem
 import stem.control
-import urllib.error
 
 
 # stem controller for connecting to the TOR control port

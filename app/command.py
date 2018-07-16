@@ -1,9 +1,9 @@
 
-import app.console
-from app.net import RequestException
 import random
 import threading
 import time
+import app.console
+from app.net import RequestException
 
 
 class Monitor:
@@ -49,16 +49,19 @@ class Monitor:
 
 class SoldierThread(threading.Thread):
 
-    def __init__(self, id, monitor):
+    def __init__(self, tid, monitor):
         """
-        :param id:
+        :param tid:
         :param monitor:
         """
 
         threading.Thread.__init__(self)
 
-        self._id = id
+        self._id = tid
         self._monitor = monitor
+
+        self._target_url = ''
+        self._weapon = None
 
         # whether the thread should be actively attacking
         self._is_attacking = False

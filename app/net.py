@@ -1,10 +1,10 @@
-"""
-Some useful networking related utility functions.
-"""
 
+import random
 import urllib.request
 import user_agent
-import random
+
+
+_user_agent = None
 
 
 class RequestException(Exception):
@@ -50,13 +50,13 @@ def request(method, url):
             'User-Agent': get_user_agent()
         }
 
-        request = urllib.request.Request(
+        request_obj = urllib.request.Request(
             url,
             method=method.upper(),
             headers=headers
         )
 
-        response = urllib.request.urlopen(request)
+        response = urllib.request.urlopen(request_obj)
 
     except urllib.error.HTTPError as ex:
 
@@ -92,7 +92,7 @@ def url_ensure_valid(url):
     if not netloc:
         netloc, path = path, ''
 
-    if not len(scheme):
+    if not scheme:
         scheme = 'https'
 
     return urllib.parse.urlunparse(

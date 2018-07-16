@@ -49,7 +49,6 @@ class Weapon:
         """
         pass
 
-    @abstractmethod
     def hold_fire(self):
         """
         Stop attacking the target.
