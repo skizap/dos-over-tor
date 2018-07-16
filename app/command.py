@@ -1,5 +1,6 @@
 
 import app.console
+from app.net import RequestException
 import random
 import threading
 import time
@@ -9,19 +10,41 @@ class Monitor:
 
    def __init__(self):
 
-      pass
+      # lock used when modifying the monitor state
+      self._lock = threading.Lock()
+
+      # monitor status / state
+      self._last_http_status = 0
+      self._last_total_hits = 0
+      self._start_time = 0
+
+   def start(self):
+      """
+      Start monitoring. This will reset the internal state of the monitor so hits per sec
+      will be calculated from now on.
+      """
+
+      self._lock.acquire()
+      self._last_http_status = 200
+      self._last_total_hits = 0
+      self._start_time = time.time()
+      self._lock.release()
 
    def report_hit(self, thread, http_status):
 
-      # TODO print status line
-      # TODO print alert when site does down / comes back
-
-      pass
-      # TODO store bytes, count time
+      self._lock.acquire()
+      self._last_http_status = http_status
+      self._last_total_hits += 1
+      self._lock.release()
 
    def get_status(self):
 
-      return (500, random.randint(50,200))
+      time_elapsed = time.time() - self._start_time
+
+      return (
+         self._last_http_status,
+         self._last_total_hits / time_elapsed
+      )
 
 
 class SoldierThread(threading.Thread):
@@ -45,6 +68,8 @@ class SoldierThread(threading.Thread):
       self._target_url = kwargs['target_url'] if 'target_url' in kwargs else None
       self._weapon = kwargs['weapon'] if 'weapon' in kwargs else None
 
+      self._is_attacking = True
+
       self.start()
 
    def hold_fire(self):
@@ -62,7 +87,14 @@ class SoldierThread(threading.Thread):
 
       while self._is_attacking:
 
-         http_status = self._weapon.attack(self._target_url)
+         try:
+
+            http_status = self._weapon.attack(self._target_url)
+
+         except RequestException as ex:
+
+            app.console.error(str(ex))
+            http_status = 0
 
          self._monitor.report_hit(self, http_status)
 
@@ -103,6 +135,8 @@ class Platoon:
 
       self._is_attacking = True
 
+      self._monitor.start()
+
       # start each of the soldier threads attacking
       # will slowely ramp up the soldier threads over a number of seconds (i.e. wont create them all at once)
       for soldier in self._soldiers:
@@ -119,13 +153,22 @@ class Platoon:
          delay = random.randint(0, 11) / 11 + 1.0
          time.sleep(delay)
 
+      # add black line to be overriden by status line
+      # this makes it easier to keep track of the status line and means it will not get overridden ever
+      # since app.console.back() is only ever called directly before the status line is printed
+      app.console.log("")
+
       # update status line periodically
       while self._is_attacking:
 
          (http_status, hits_per_sec) = self._monitor.get_status()
+         status_line = "%s %0.2f hits per sec" % (http_status, hits_per_sec)
 
-         app.console.log("%s %0.2f hits per sec" % (http_status, hits_per_sec))
          app.console.back(1)
+         if http_status == 200:
+            app.console.log(status_line)
+         else:
+            app.console.error(status_line)
 
          # repeat every second
          time.sleep(1.0)
