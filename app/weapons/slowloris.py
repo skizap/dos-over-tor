@@ -97,7 +97,7 @@ class SlowLorisWeapon(Weapon):
 
         return sock
 
-    def attack(self, target_url):
+    def attack(self):
 
         hits = 0  # total # hits to the server we did
 
@@ -124,7 +124,7 @@ class SlowLorisWeapon(Weapon):
             try:
 
                 self._sockets.append(
-                    self._spawn_socket(target_url)
+                    self._spawn_socket(self._target_url)
                 )
 
             except socket.error as ex:

@@ -71,8 +71,9 @@ class SoldierThread(threading.Thread):
         self._target_url = kwargs['target_url'] if 'target_url' in kwargs else None
         self._weapon = kwargs['weapon'] if 'weapon' in kwargs else None
 
-        self._is_attacking = True
+        self._weapon.target(self._target_url)
 
+        self._is_attacking = True
         self.start()
 
     def hold_fire(self):
@@ -80,6 +81,10 @@ class SoldierThread(threading.Thread):
         app.console.log("stopping soldier thread #%d" % self._id)
 
         self._is_attacking = False
+
+    def wait_done(self):
+
+        app.console.log("waiting for soldier thread #%d" % self._id)
 
         if self.isAlive():
             self.join()
@@ -92,7 +97,7 @@ class SoldierThread(threading.Thread):
 
             try:
 
-                (num_hits, http_status) = self._weapon.attack(self._target_url)
+                (num_hits, http_status) = self._weapon.attack()
                 self._monitor.report_hit(self, num_hits, http_status)
 
             except RequestException as ex:
@@ -145,17 +150,20 @@ class Platoon:
         # will slowely ramp up the soldier threads over a number of seconds (i.e. wont create them all at once)
         for soldier in self._soldiers:
 
-            weapon = weapon_factory.make()
+            if self._is_attacking:
+                # NOTE we check is_attacking here, just incase the user hit ctrl-c during the startup process
 
-            soldier.attack(
-                target_url=target_url,
-                weapon=weapon
-            )
+                weapon = weapon_factory.make()
 
-            # introduce artifical delay between starting threads some where between 1-2 seconds
-            # we use 11 as it is a prime numebr and will stagger the threads nicely
-            delay = random.randint(0, 11) / 11 + 1.0
-            time.sleep(delay)
+                soldier.attack(
+                    target_url=target_url,
+                    weapon=weapon
+                )
+
+                # introduce artifical delay between starting threads some where between 1-2 seconds
+                # we use 11 as it is a prime numebr and will stagger the threads nicely
+                delay = random.randint(0, 11) / 11 + 1.0
+                time.sleep(delay)
 
         # add black line to be overriden by status line
         # this makes it easier to keep track of the status line and means it will not get overridden ever
@@ -184,5 +192,10 @@ class Platoon:
 
         self._is_attacking = False
 
+        # first request all the soldiers to hold fire
         for soldier in self._soldiers:
             soldier.hold_fire()
+
+        # then wait for each of them to finish
+        for soldier in self._soldiers:
+            soldier.wait_done()

@@ -1,6 +1,5 @@
 
 from abc import abstractmethod
-import random
 
 
 class WeaponFactory:
@@ -21,7 +20,7 @@ class WeaponFactory:
     @abstractmethod
     def make(self):
         """
-        Create a Weapon instance
+        Create a new Weapon instance
         """
         pass
 
@@ -41,16 +40,25 @@ class Weapon:
         self._http_method = kwargs['http_method'] if 'http_method' in kwargs else 'GET'
         self._cache_buster = kwargs['cache_buster'] if 'cache_buster' in kwargs else False
 
-    @abstractmethod
-    def attack(self, target_url):
+        self._target_url = ''
+
+    def target(self, target_url):
         """
-        Start attacking the given target URL
+        Set the target URL/domain to be attacked
         :param target_url: The target URL/domain to be attacked
+        """
+
+        self._target_url = target_url
+
+    @abstractmethod
+    def attack(self):
+        """
+        Run a single round of attacks against the target (set via target(target_url=XXX))
         """
         pass
 
     def hold_fire(self):
         """
-        Stop attacking the target.
+        Stop attacking the target
         """
         pass

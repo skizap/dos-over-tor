@@ -5,6 +5,7 @@ import app.net
 import app.tor
 from app.command import Platoon
 from app.weapons.singleshot import SingleShotFactory
+from app.weapons.fullauto import FullAutoFactory
 from app.weapons.slowloris import SlowLorisFactory
 import fire
 import signal
@@ -67,6 +68,34 @@ class CLI:
 
         self._shutdown()
 
+    def fullauto(self, target):
+        """
+        Run an attack a domain, crawling all links found on the site.
+        :param target: The target URL of the attack
+        """
+
+        try:
+
+            self._init()
+
+            app.console.system("running fullauto")
+
+            weapon_factory = FullAutoFactory(
+                http_method=self._http_method,
+                cache_buster=self._cache_buster
+            )
+
+            self._platoon.attack(
+                weapon_factory=weapon_factory,
+                target_url=target
+            )
+
+        except Exception as ex:
+
+            app.console.error(str(ex))
+
+        self._shutdown()
+
     def slowloris(self, target, num_sockets=100):
         """
         Run a slow loris, low bandwidth attack on the given URL / domain.
@@ -111,7 +140,7 @@ class CLI:
             ctrl_port=self._tor_ctrl_port
         )
 
-        app.console.system("request new identity on TOR")
+        app.console.system("requesting new identity on TOR")
         app.tor.new_ident()
 
         ourip = app.net.lookupip()

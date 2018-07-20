@@ -15,9 +15,9 @@ class SingleShotFactory(WeaponFactory):
 
 class SingleShotWeapon(Weapon):
 
-    def attack(self, target_url):
+    def attack(self):
 
-        target_url = app.net.url_ensure_valid(target_url)
+        target_url = app.net.url_ensure_valid(self._target_url)
 
         if self._cache_buster:
             target_url = app.net.url_cache_buster(target_url)
