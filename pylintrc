@@ -155,8 +155,8 @@ enable=c-extension-no-member
 # respectively contain the number of errors / warnings messages and the total
 # number of statements analyzed. This is used by the global evaluation report
 # (RP0004).
-evaluation=min(10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)+0.25, 10)
-# NOTE this has been updated to allow 9.5/10 as pass. We add 0.25 to the normal score, keep within 1-10 range
+evaluation=min(10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)+0.5, 10)
+# NOTE this has been updated to allow 9.5/10 as pass. We add 0.5 to the normal score, keep within 1-10 range
 
 # Template used to display messages. This is a python new-style format string
 # used to format the message information. See doc for all details
