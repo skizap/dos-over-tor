@@ -38,6 +38,6 @@ Running a full auto attack:
 
 ## TODO
 
-[ ] Travis CI set up
-[ ] Application specific attacks - e.g. https://www.exploit-db.com/exploits/43968/
-[ ] Monitor to work out bytes sent / received
+ - [ ] Travis CI set up
+ - [ ] Monitor to work out bytes sent / received
+ - [ ] Application specific attacks - e.g. https://www.exploit-db.com/exploits/43968/
