@@ -1,9 +1,9 @@
 
 import random
 import urllib
+from bs4 import BeautifulSoup
 import app.net
 from . import Weapon, WeaponFactory
-from bs4 import BeautifulSoup
 
 
 class FullAutoFactory(WeaponFactory):
