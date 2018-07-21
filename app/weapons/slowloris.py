@@ -41,7 +41,7 @@ class SlowLorisWeapon(Weapon):
         """
 
         # parse the URL / domain so we can connect to the directly to the domain
-        scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(target_url)
+        (scheme, netloc, path, params, query, fragment) = urllib.parse.urlparse(target_url)
         if netloc == '':
             netloc, path = path, ''
 

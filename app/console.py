@@ -103,7 +103,7 @@ def _log_header_len():
 def _log(colour, message):
     """Log given mesage to the console"""
 
-    (width, height) = _ttysize()
+    (width, _) = _ttysize()
 
     # EOL is first so last log message is always at bottom of terminal window
 
@@ -122,7 +122,7 @@ def _log(colour, message):
     # clear the remainder of the line by filling it with spaces, i.e. ' '
     if logstr_len % width:
         clearline = ''
-        for x in range(logstr_len % width, width):
+        for _ in range(logstr_len % width, width):
             clearline += " "
         sys.stdout.write(clearline)
 
@@ -159,11 +159,11 @@ def system(message):
 def hr():
     """Outputs a horizontal rule / line."""
 
-    (width, ) = _ttysize()
+    (width, _) = _ttysize()
 
     # build the horizontal line
     row = ""
-    for i in range(0, width-_log_header_len()):
+    for _ in range(0, width-_log_header_len()):
         row += "#"
 
     # output the line
