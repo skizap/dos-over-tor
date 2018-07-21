@@ -1,6 +1,8 @@
 
 # DoS over TOR
 
+[![Build Status](https://travis-ci.org/zacscott/dos-over-tor.svg?branch=master)](https://travis-ci.org/zacscott/dos-over-tor)
+
 Proof of concept denial of service over TOR stress test tool. Is multi-threaded and supports multiple attack vectors.
 
 ![screenshot](screenshot.png)
