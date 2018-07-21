@@ -11,6 +11,7 @@ class Monitor:
     Attack status monitor, records analytics on the attack and maintains the statsu displayed in the status line
     """
 
+    NUM_BUCKETS = 3  # 1 being counted, 1 being used by get_status() and 1 cleared ready for the next round
     BUCKET_SECS = 3  # number of seconds each hit bucket covers
 
     def __init__(self):
@@ -39,7 +40,7 @@ class Monitor:
 
         # initialise all of the hit buckets
         self._hit_buckets_index = 0
-        for i in range(0, self._num_buckets()):
+        for _ in range(0, self.NUM_BUCKETS):
             self._hit_buckets.append(0)
 
         self._lock.release()
@@ -61,7 +62,7 @@ class Monitor:
         self._hit_buckets[hit_bucket_index] += num_hits
 
         # clear the next bucket, so they always restart at 0
-        hit_bucket_index = (hit_bucket_index+1) % self._num_buckets()
+        hit_bucket_index = (hit_bucket_index+1) % self.NUM_BUCKETS
         self._hit_buckets[hit_bucket_index] = 0
 
         self._lock.release()
@@ -73,7 +74,7 @@ class Monitor:
         """
 
         # get hits from the previous hit bucket, while the current one is being populated
-        hit_bucket_index = (self._current_bucket()-1) % self._num_buckets()
+        hit_bucket_index = (self._current_bucket()-1) % self.NUM_BUCKETS
         num_hits = self._hit_buckets[hit_bucket_index]
 
         return (
@@ -81,11 +82,8 @@ class Monitor:
             num_hits / self.BUCKET_SECS
         )
 
-    def _num_buckets(self):
-        return 3  # 1 being counted, 1 being used by get_status() and 1 cleared ready for the next round
-
     def _current_bucket(self):
-        return int(time.time()/self.BUCKET_SECS) % self._num_buckets()
+        return int(time.time()/self.BUCKET_SECS) % self.NUM_BUCKETS
 
 
 class SoldierThread(threading.Thread):
