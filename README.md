@@ -1,7 +1,7 @@
 
 # DoS over TOR
 
-Proof of concept denial of service over TOR stress test tool. Is multi threaded and supports multiple attack vectors.
+Proof of concept denial of service over TOR stress test tool. Is multi-threaded and supports multiple attack vectors.
 
 ![screenshot](screenshot.png)
 
@@ -38,7 +38,6 @@ Running a full auto attack:
 
 ## TODO
 
-[ ] Full auto attack
 [ ] Monitor to average over the last minute
 [ ] Monitor to work out bytes sent / received
 ---
