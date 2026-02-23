@@ -1,0 +1,83 @@
+[build-system]
+requires = ["setuptools>=61.0", "setuptools-scm>=8.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dos-over-tor"
+dynamic = ["version"]
+description = "Proof of concept denial of service over TOR stress test tool"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Zac Scott", email = "zac.scott@example.com"}
+]
+keywords = ["tor", "dos", "security", "stress-test"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Software Development :: Testing",
+]
+
+dependencies = [
+    "beautifulsoup4==4.14.3",
+    "PySocks==1.7.1",
+    "stem==1.8.2",
+    "fire==0.1.3",
+    "user-agent==0.1.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "mypy>=1.8.0",
+    "ruff>=0.2.0",
+    "bandit>=1.7.0",
+    "safety>=2.3.0,<3",
+]
+
+[project.scripts]
+dos-over-tor = "main:main"
+
+[tool.setuptools_scm]
+write_to = "app/_version.py"
+
+[tool.setuptools]
+packages = ["app", "app.weapons"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=80"
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/_version.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false

@@ -1,5 +1,10 @@
 
 from abc import abstractmethod
+from typing import Any, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.command import Monitor
+    from app.models import AttackResult
 
 
 class WeaponFactory:
@@ -7,7 +12,7 @@ class WeaponFactory:
     Weapons factory which produces Weapon instances. Should be extended for each type of weapon.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         """
 
         :param http_method: HTTP method to use when making HTTP requests
@@ -18,9 +23,10 @@ class WeaponFactory:
         self._cache_buster = kwargs['cache_buster'] if 'cache_buster' in kwargs else False
 
     @abstractmethod
-    def make(self):
+    def make(self, network_client: Optional[Any] = None) -> 'Weapon':
         """
         Create a new Weapon instance
+        :param network_client: Optional NetworkClient instance to use for HTTP requests
         """
         pass
 
@@ -30,7 +36,7 @@ class Weapon:
     A weapon which can be used in an attack
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         """
 
         :param http_method: HTTP method to use when making HTTP requests
@@ -41,23 +47,27 @@ class Weapon:
         self._cache_buster = kwargs['cache_buster'] if 'cache_buster' in kwargs else False
 
         self._target_url = ''
+        self._monitor = None
 
-    def target(self, target_url):
+    def target(self, target_url: str, monitor: Optional['Monitor'] = None) -> None:
         """
         Set the target URL/domain to be attacked
         :param target_url: The target URL/domain to be attacked
+        :param monitor: Optional monitor instance for reporting metrics
         """
 
         self._target_url = target_url
+        if monitor is not None:
+            self._monitor = monitor
 
     @abstractmethod
-    def attack(self):
+    def attack(self) -> 'AttackResult':
         """
         Run a single round of attacks against the target (set via target(target_url=XXX))
         """
         pass
 
-    def hold_fire(self):
+    def hold_fire(self) -> None:
         """
         Stop attacking the target
         """

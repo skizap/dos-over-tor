@@ -1,0 +1,2 @@
+[console_scripts]
+dos-over-tor = main:main

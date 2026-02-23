@@ -31,13 +31,13 @@ _ESCAPE_REVERSED = '\u001b[7m'
 _ESCAPE_RESET = '\u001b[0m'
 
 
-def _ttysize():
+def _ttysize() -> tuple[int, int]:
     """Returns the size of the terminal (width, height)"""
     rows, columns = os.popen('stty size', 'r').read().split()
     return (int(columns), int(rows))
 
 
-def _escape(text, esc_code):
+def _escape(text: str, esc_code: str) -> str:
     """Escape the given text with the given escape code"""
 
     escaped = text  # by default, we leave the text unchanged
@@ -49,17 +49,17 @@ def _escape(text, esc_code):
     return escaped
 
 
-def _cursor_hide():
+def _cursor_hide() -> None:
     """Hide the cursor from the terminal"""
     sys.stdout.write("\033[?25l")
 
 
-def _cursor_show():
+def _cursor_show() -> None:
     """Show the cursor from the terminal"""
     sys.stdout.write("\033[?25h")
 
 
-def _log_format(colour, message):
+def _log_format(colour: str, message: str) -> str:
     """
     Format a log mesage for output
     :param colour: Colour code for the message text
@@ -78,7 +78,7 @@ def _log_format(colour, message):
     return formatted
 
 
-def _strip_escape_codes(unclean):
+def _strip_escape_codes(unclean: str) -> str:
     """Strips out the ANSI escape codes from the given string"""
 
     # strip out the escape codes
@@ -88,7 +88,7 @@ def _strip_escape_codes(unclean):
     return stripped
 
 
-def _log_header_len():
+def _log_header_len() -> int:
     """Returns the size of the header included by _log_format()"""
 
     # get an empty log message to measure its length
@@ -100,7 +100,7 @@ def _log_header_len():
     return len(logger_header_stripped)
 
 
-def _log(colour, message):
+def _log(colour: str, message: str) -> None:
     """Log given mesage to the console"""
 
     (width, _) = _ttysize()
@@ -131,7 +131,7 @@ def _log(colour, message):
     sys.stdout.flush()
 
 
-def error(message):
+def error(message: str) -> None:
     """
     Log an error message to stderr.
     :param message: The message to log to the error output
@@ -139,7 +139,7 @@ def error(message):
     _log(_ESCAPE_DARK_RED, message)
 
 
-def log(message):
+def log(message: str) -> None:
     """
     Log a message to the console
     :param message: The message to output to the console.
@@ -147,7 +147,7 @@ def log(message):
     _log(_ESCAPE_DARK_GREEN, message)
 
 
-def system(message):
+def system(message: str) -> None:
     """
     Log a system message to the console, shouldn't actually be used by the bot
     :param message: The message to output to the console.
@@ -156,7 +156,7 @@ def system(message):
     _log(_ESCAPE_DARK_YELLOW, message)
 
 
-def hr():
+def hr() -> None:
     """Outputs a horizontal rule / line."""
 
     (width, _) = _ttysize()
@@ -170,7 +170,7 @@ def hr():
     log(row)
 
 
-def back(num_lines):
+def back(num_lines: int) -> None:
     """
     Back the cursor up given number of lines. Allows for overwriting sections
     of text on the console. Good for updating a status message
@@ -181,7 +181,7 @@ def back(num_lines):
     sys.stdout.flush()
 
 
-def shutdown():
+def shutdown() -> None:
     """
     Shutdown the console system and reset anything changed before returning
     the user to the prompt.
